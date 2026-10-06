@@ -1,0 +1,59 @@
+@host = https://localhost:7244
+
+### Get all patients
+
+GET {{host}}/api/patients
+Accept: application/json
+
+### Get patient by id
+GET {{host}}/api/patients/3
+Accept: application/json
+
+### Create patient
+
+POST {{host}}/api/patients
+Content-Type: application/json
+
+{
+  "firstName": "Szymon",
+  "lastName": "Jura",
+  "dateOfBirth": "2004-07-27",
+  "email": "szymon.jura@example.com"
+}
+
+### Update patient
+
+PUT {{host}}/api/patients/2
+Content-Type: application/json
+
+{
+  "firstName": "Adam",
+  "lastName": "Szybki",
+  "dateOfBirth": "1999-05-20",
+  "email": "adam.szybki@example.com",
+  "isActive": true
+}
+
+### Delete patient
+
+DELETE {{host}}/api/patients/1
+
+### Search patients by last name
+
+GET {{host}}/api/patients/search?lastName=Sz
+Accept: application/json
+
+### Filter patients by active status
+
+GET {{host}}/api/patients/filter?active=true
+Accept: application/json
+
+### Update patient active status
+
+PUT {{host}}/api/patients/3/status?active=true
+Accept: application/json
+
+### Get patient summary
+
+GET {{host}}/api/patients/3/summary
+Accept: application/json
