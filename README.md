@@ -3,7 +3,7 @@
 PatientManager is a simple ASP.NET Core Web API created as a learning project for practicing backend development in C# and .NET.
 
 The application allows managing patient data through REST API endpoints.  
-The project focuses on clean separation between controllers and services, DTO usage, Dependency Injection, routing, model binding and proper HTTP responses.
+The project focuses on clean separation between controllers and services, DTO usage, Dependency Injection, routing, model binding, input validation and proper HTTP responses.
 
 ## Features
 
@@ -16,6 +16,7 @@ The project focuses on clean separation between controllers and services, DTO us
 - Filter patients by active status
 - Update patient active status
 - Get patient summary
+- Input validation using Data Annotations
 
 ## Technologies
 
