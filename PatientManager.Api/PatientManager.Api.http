@@ -6,7 +6,7 @@ GET {{host}}/api/patients
 Accept: application/json
 
 ### Get patient by id
-GET {{host}}/api/patients/3
+GET {{host}}/api/patients/1
 Accept: application/json
 
 ### Create patient
@@ -15,7 +15,7 @@ POST {{host}}/api/patients
 Content-Type: application/json
 
 {
-  "firstName": "Szymon",
+  "firstName": "Symon",
   "lastName": "Jura",
   "dateOfBirth": "2004-07-27",
   "email": "szymon.jura@example.com"
@@ -23,34 +23,33 @@ Content-Type: application/json
 
 ### Update patient
 
-PUT {{host}}/api/patients/2
+PUT {{host}}/api/patients/3
 Content-Type: application/json
 
 {
   "firstName": "Adam",
   "lastName": "Szybki",
   "dateOfBirth": "1999-05-20",
-  "email": "adam.szybki@example.com",
-  "isActive": true
+  "email": "adam.szybki@example.com"
 }
 
 ### Delete patient
 
-DELETE {{host}}/api/patients/1
+DELETE {{host}}/api/patients/4
 
 ### Search patients by last name
 
-GET {{host}}/api/patients/search?lastName=Sz
+GET {{host}}/api/patients/search?lastName=sz
 Accept: application/json
 
 ### Filter patients by active status
 
-GET {{host}}/api/patients/filter?active=true
+GET {{host}}/api/patients/filter?active=false
 Accept: application/json
 
 ### Update patient active status
 
-PUT {{host}}/api/patients/3/status?active=true
+PUT {{host}}/api/patients/1/status?active=false
 Accept: application/json
 
 ### Get patient summary

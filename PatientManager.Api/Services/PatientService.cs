@@ -1,66 +1,46 @@
-﻿using PatientManager.Api.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using PatientManager.Api.Data;
+using PatientManager.Api.Models;
 
 namespace PatientManager.Api.Services;
 
 public class PatientService : IPatientService
 {
-    private static readonly List<Patient> s_patients =
-    [
-        new Patient
-        {
-            Id = 1,
-            FirstName = "Anna",
-            LastName = "Kowalska",
-            DateOfBirth = new DateOnly(1998, 4, 12),
-            Email = "anna.kowalska@example.com",
-            IsActive = true
-        },
-        
-        new Patient
-        {
-            Id = 2,
-            FirstName = "Piotr",
-            LastName = "Nowak",
-            DateOfBirth = new DateOnly(1985, 11, 3),
-            Email = "piotr.nowak@example.com",
-            IsActive = true
-        },
-        
-        new Patient
-        {
-            Id = 3,
-            FirstName = "Marta",
-            LastName = "Kowalczyk",
-            DateOfBirth = new DateOnly(2001, 7, 25),
-            Email = "marta.kowalczyk@example.com",
-            IsActive = false
-        }
-    ];
+    private readonly AppDbContext _context;
+
+    public PatientService(AppDbContext context)
+    {
+        _context = context;
+    }
     
-    public List<Patient> GetPatients()
+    public async Task<List<Patient>> GetPatientsAsync()
     {
-        return s_patients;
+        return await _context.Patients
+            .AsNoTracking()
+            .OrderBy(p => p.Id)
+            .ToListAsync();
     }
 
-    public Patient? GetPatient(int id)
+    public async Task<Patient?> GetPatientAsync(int id)
     {
-        return s_patients
-            .FirstOrDefault(p => p.Id == id);
+        return await _context.Patients
+            .FirstOrDefaultAsync(p => p.Id == id);
     }
 
-    public Patient CreatePatient(Patient newPatient)
+    public async Task<Patient> CreatePatientAsync(Patient newPatient)
     {
-        newPatient.Id = s_patients.Count == 0 ? 1 : s_patients.Max(p => p.Id) + 1;
         newPatient.IsActive = true;
         
-        s_patients.Add(newPatient);
+        _context.Patients.Add(newPatient);
+
+        await _context.SaveChangesAsync();
 
         return newPatient;
     }
 
-    public Patient? UpdatePatient(int id, Patient patientData)
+    public async Task<Patient?> UpdatePatientAsync(int id, Patient patientData)
     {
-        Patient? existingPatient = GetPatient(id);
+        Patient? existingPatient = await GetPatientAsync(id);
 
         if (existingPatient is null)
         {
@@ -71,40 +51,47 @@ public class PatientService : IPatientService
         existingPatient.LastName = patientData.LastName;
         existingPatient.DateOfBirth = patientData.DateOfBirth;
         existingPatient.Email = patientData.Email;
-        existingPatient.IsActive = patientData.IsActive;
+
+        await _context.SaveChangesAsync();
 
         return existingPatient;
     }
 
-    public bool DeletePatient(int id)
+    public async Task<bool> DeletePatientAsync(int id)
     {
-        Patient? patientToDelete = GetPatient(id);
+        Patient? patientToDelete = await GetPatientAsync(id);
 
         if (patientToDelete is null)
         {
             return false;
         }
+
+        _context.Patients.Remove(patientToDelete);
         
-        return s_patients.Remove(patientToDelete);
+        await _context.SaveChangesAsync();
+
+        return true;
     }
 
-    public List<Patient> SearchByLastName(string lastName)
+    public async Task<List<Patient>> SearchByLastNameAsync(string lastName)
     {
-        return s_patients
-            .Where(p => p.LastName.Contains(lastName, StringComparison.OrdinalIgnoreCase))
-            .ToList();
+        return await _context.Patients
+            .AsNoTracking()
+            .Where(p => p.LastName.Contains(lastName))
+            .ToListAsync();
     }
 
-    public List<Patient> FilterByActiveStatus(bool active)
+    public async Task<List<Patient>> FilterByActiveStatusAsync(bool active)
     {
-        return s_patients
+        return await _context.Patients
+            .AsNoTracking()
             .Where(p => p.IsActive == active)
-            .ToList();
+            .ToListAsync();
     }
 
-    public Patient? UpdateActiveStatus(int id, bool active)
+    public async Task<Patient?> UpdateActiveStatusAsync(int id, bool active)
     {
-        Patient? existingPatient = GetPatient(id);
+        Patient? existingPatient = await GetPatientAsync(id);
 
         if (existingPatient is null)
         {
@@ -112,6 +99,9 @@ public class PatientService : IPatientService
         }
 
         existingPatient.IsActive = active;
+
+        await _context.SaveChangesAsync();
+
         return existingPatient;
     }
 }

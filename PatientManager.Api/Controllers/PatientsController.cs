@@ -18,19 +18,21 @@ public class PatientsController : ControllerBase
 
     //Basic operations
     [HttpGet]
-    public ActionResult<List<PatientDto>> GetPatients()
+    public async Task<ActionResult<List<PatientDto>>> GetPatientsAsync()
     {
-        return _patientService
-            .GetPatients()
+        List<Patient> patients = await _patientService.GetPatientsAsync();
+
+        return patients
             .Select(MapToPatientDto)
             .ToList();
     }
 
     [HttpGet("{id}")]
-    public ActionResult<PatientDto> GetPatient(
+    [ActionName(nameof(GetPatientAsync))]
+    public async Task<ActionResult<PatientDto>> GetPatientAsync(
         [FromRoute] int id)
     {
-        Patient? patient = _patientService.GetPatient(id);
+        Patient? patient = await _patientService.GetPatientAsync(id);
 
         if (patient is null)
         {
@@ -41,7 +43,7 @@ public class PatientsController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<PatientDto> CreatePatient(
+    public async Task<ActionResult<PatientDto>> CreatePatientAsync(
         [FromBody] CreatePatientDto createPatientDto)
     {
         Patient newPatient = new Patient
@@ -49,20 +51,20 @@ public class PatientsController : ControllerBase
             FirstName = createPatientDto.FirstName,
             LastName = createPatientDto.LastName,
             DateOfBirth = createPatientDto.DateOfBirth,
-            Email = createPatientDto.Email,
+            Email = createPatientDto.Email
         };
 
-        Patient createdPatient = _patientService.CreatePatient(newPatient);
+        Patient createdPatient = await _patientService.CreatePatientAsync(newPatient);
 
         return CreatedAtAction(
-            nameof(GetPatient),
+            nameof(GetPatientAsync),
             new { id = createdPatient.Id },
             MapToPatientDto(createdPatient)
         );
     }
     
     [HttpPut("{id}")]
-    public IActionResult UpdatePatient(
+    public async Task<IActionResult> UpdatePatientAsync(
         [FromRoute] int id,
         [FromBody] UpdatePatientDto updatePatientDto)
     {
@@ -71,11 +73,10 @@ public class PatientsController : ControllerBase
             FirstName = updatePatientDto.FirstName,
             LastName = updatePatientDto.LastName,
             DateOfBirth = updatePatientDto.DateOfBirth,
-            Email = updatePatientDto.Email,
-            IsActive = updatePatientDto.IsActive
+            Email = updatePatientDto.Email
         };
         
-        Patient? updatedPatient = _patientService.UpdatePatient(id, patientData);
+        Patient? updatedPatient = await _patientService.UpdatePatientAsync(id, patientData);
 
         if (updatedPatient is null)
         {
@@ -86,10 +87,10 @@ public class PatientsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public IActionResult DeletePatient(
+    public async Task<IActionResult> DeletePatientAsync(
         [FromRoute] int id)
     {
-        if (_patientService.DeletePatient(id))
+        if (await _patientService.DeletePatientAsync(id))
         {
             return NoContent();
         }
@@ -99,31 +100,33 @@ public class PatientsController : ControllerBase
     
     //Additional operations
     [HttpGet("search")]
-    public ActionResult<List<PatientDto>> SearchByLastName(
+    public async Task<ActionResult<List<PatientDto>>> SearchByLastNameAsync(
         [FromQuery] string lastName)
     {
-        return _patientService
-            .SearchByLastName(lastName)
+        List<Patient> patients = await _patientService.SearchByLastNameAsync(lastName);
+
+        return patients
             .Select(MapToPatientDto)
             .ToList();
     }
 
     [HttpGet("filter")]
-    public ActionResult<List<PatientDto>> FilterByActiveStatus(
+    public async Task<ActionResult<List<PatientDto>>> FilterByActiveStatusAsync(
         [FromQuery] bool active)
     {
-        return _patientService
-            .FilterByActiveStatus(active)
+        List<Patient> patients = await _patientService.FilterByActiveStatusAsync(active);
+
+        return patients
             .Select(MapToPatientDto)
             .ToList();
     }
 
     [HttpPut("{id}/status")]
-    public ActionResult<PatientDto> UpdateActiveStatus(
+    public async Task<ActionResult<PatientDto>> UpdateActiveStatusAsync(
         [FromRoute] int id,
         [FromQuery] bool active)
     {
-        Patient? updatedPatient = _patientService.UpdateActiveStatus(id, active);
+        Patient? updatedPatient = await _patientService.UpdateActiveStatusAsync(id, active);
 
         if (updatedPatient is null)
         {
@@ -134,10 +137,10 @@ public class PatientsController : ControllerBase
     }
 
     [HttpGet("{id}/summary")]
-    public ActionResult<PatientSummaryDto> GetPatientSummary(
+    public async Task<ActionResult<PatientSummaryDto>> GetPatientSummaryAsync(
         [FromRoute] int id)
     {
-        Patient? patient = _patientService.GetPatient(id);
+        Patient? patient = await _patientService.GetPatientAsync(id);
 
         if (patient is null)
         {
