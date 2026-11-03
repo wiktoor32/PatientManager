@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using PatientManager.Api.Enums;
 using PatientManager.Api.Validation;
 
 namespace PatientManager.Api.Dtos;
@@ -7,17 +8,28 @@ public class UpdatePatientDto
 {
     [Required]
     [MaxLength(100)]
-    public string FirstName { get; set; } = string.Empty;
-    
+    public required string FirstName { get; set; }
+
     [Required]
     [MaxLength(100)]
-    public string LastName { get; set; } = string.Empty;
-    
+    public required string LastName { get; set; }
+
+    [Range(1, 2, ErrorMessage = "Gender must be Male or Female.")]
+    public required Gender Gender { get; set; }
+
     [ValidBirthDate]
-    public DateOnly DateOfBirth { get; set; }
-    
+    public required DateOnly DateOfBirth { get; set; }
+
+    [Required]
+    [ValidPesel]
+    public required string Pesel { get; set; }
+
     [Required]
     [EmailAddress]
     [MaxLength(254)]
-    public string Email { get; set; } = string.Empty;
+    public required string Email { get; set; }
+
+    [Required]
+    [ValidPhoneNumber]
+    public required string PhoneNumber { get; set; }
 }

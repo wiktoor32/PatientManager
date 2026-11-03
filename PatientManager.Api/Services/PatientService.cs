@@ -30,6 +30,7 @@ public class PatientService : IPatientService
     public async Task<Patient> CreatePatientAsync(Patient newPatient)
     {
         newPatient.IsActive = true;
+        newPatient.CreatedAt = DateTimeOffset.UtcNow;
         
         _context.Patients.Add(newPatient);
 
@@ -49,28 +50,15 @@ public class PatientService : IPatientService
 
         existingPatient.FirstName = patientData.FirstName;
         existingPatient.LastName = patientData.LastName;
+        existingPatient.Gender = patientData.Gender;
         existingPatient.DateOfBirth = patientData.DateOfBirth;
+        existingPatient.Pesel = patientData.Pesel;
         existingPatient.Email = patientData.Email;
+        existingPatient.PhoneNumber = patientData.PhoneNumber;
 
         await _context.SaveChangesAsync();
 
         return existingPatient;
-    }
-
-    public async Task<bool> DeletePatientAsync(int id)
-    {
-        Patient? patientToDelete = await GetPatientAsync(id);
-
-        if (patientToDelete is null)
-        {
-            return false;
-        }
-
-        _context.Patients.Remove(patientToDelete);
-        
-        await _context.SaveChangesAsync();
-
-        return true;
     }
 
     public async Task<List<Patient>> SearchByLastNameAsync(string lastName)

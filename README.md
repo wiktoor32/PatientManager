@@ -1,47 +1,66 @@
 ﻿# PatientManager
 
-PatientManager is a simple ASP.NET Core Web API created as a learning project for practicing backend development in C# and .NET.
+PatientManager is an ASP.NET Core Web API developed as a C#/.NET backend learning and portfolio project. It is being expanded into a hospital-oriented patient management system, with an emphasis on clean separation of responsibilities, relational data modeling, input validation, and asynchronous database access.
 
-The application provides REST API endpoints for managing patient records stored in a Microsoft SQL Server database. It focuses on separating HTTP handling from application logic, using DTOs, Dependency Injection, input validation, asynchronous database operations, and appropriate HTTP responses.
+**Current scope:** Patient management is implemented. Models, relationships, and database tables for doctors, appointments, and emergency contacts are prepared, but their API endpoints and application services are not implemented yet.
 
 ## Features
 
-- Get all patients or retrieve a patient by ID
-- Create, update, and delete patient records
-- Search patients by last name
-- Filter patients by active status
-- Update a patient's active status
+### Implemented
+
+- Create, retrieve, and update patient records, with automatically assigned IDs, active status by default, and UTC creation timestamps
+- Search for patients by last name and filter by active status
+- Activate and deactivate patients without physically deleting their records
 - Retrieve a patient summary
-- Validate incoming data using Data Annotations and a custom date-of-birth validator
-- Store patient data persistently with Entity Framework Core and SQL Server
-- Handle unhandled request exceptions using ASP.NET Core Problem Details
+- Use separate request/response DTOs and a dedicated `PatientMapper`
+- Validate required fields, name lengths, email addresses, gender, and dates of birth
+- Validate the structure, checksum, encoded date, and non-future date of Polish PESEL numbers
+- Validate international phone numbers with libphonenumber-csharp and store them in the E.164 format (e.g., +48600123456)
+- Store data in Microsoft SQL Server with Entity Framework Core and migrations
+- Return appropriate HTTP responses (200, 201, 204, 400, 404); handle unhandled exceptions with ASP.NET Core Problem Details
 
-## Technologies
 
-- C# / .NET 10
+### Database model prepared for future features
+
+- **Patient → Appointments:** one-to-many; an appointment requires a patient
+- **Doctor → Appointments:** one-to-many; an appointment requires a doctor
+- **Patient → EmergencyContact:** one-to-zero-or-one; each emergency contact requires a patient
+- Required relationships use `DeleteBehavior.NoAction` to prevent cascade deletion of related records
+- Entity configurations are kept in `Data/Configurations/` and use EF Core conventions wherever possible
+
+The `Doctors`, `Appointments`, and `EmergencyContacts` tables exist, but their management endpoints are planned for later development.
+
+## Tech stack
+
+- C# and .NET 10
 - ASP.NET Core Web API (controllers)
-- Entity Framework Core 10 (SQL Server provider and migrations)
+- Entity Framework Core 10, SQL Server provider, and migrations
 - Microsoft SQL Server
-- LINQ and async/await
-- Dependency Injection
-- Data Annotations
-- OpenAPI
+- LINQ, `async` / `await`, and Dependency Injection
+- Data Annotations and custom validation attributes
+- `libphonenumber-csharp` for phone number validation and E.164 formatting
+- ASP.NET Core Problem Details and OpenAPI
+- JetBrains Rider HTTP Client (`.http` requests)
 
 ## API endpoints
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| `GET` | `/api/patients` | Get all patients |
-| `GET` | `/api/patients/{id}` | Get a patient by ID |
-| `POST` | `/api/patients` | Create a patient |
-| `PUT` | `/api/patients/{id}` | Update a patient |
-| `DELETE` | `/api/patients/{id}` | Delete a patient |
-| `GET` | `/api/patients/search?lastName=...` | Search by last name |
-| `GET` | `/api/patients/filter?active=true` | Filter by active status |
-| `PUT` | `/api/patients/{id}/status?active=false` | Change active status |
-| `GET` | `/api/patients/{id}/summary` | Get a patient summary |
+The following table lists all **11 positive-path requests** from `PatientManager.Api.http`. Several requests use the same route with different data or query parameters, so these represent **8 distinct method-and-route combinations**.
 
-The API uses DTOs for requests and responses. Creating a patient returns `201 Created`; successful updates and deletions return `204 No Content`. Invalid input returns `400 Bad Request`, and requests for missing patients return `404 Not Found` where applicable.
+| # | Method | Endpoint | Description | Success response |
+| --- | --- | --- | --- | --- |
+| 1 | `POST` | `/api/patients` | Create the first patient | `201 Created` |
+| 2 | `POST` | `/api/patients` | Create the second patient | `201 Created` |
+| 3 | `GET` | `/api/patients/1` | Get patient details by ID | `200 OK` |
+| 4 | `GET` | `/api/patients/1/summary` | Get patient summary, including PESEL | `200 OK` |
+| 5 | `GET` | `/api/patients` | List all patients | `200 OK` |
+| 6 | `PUT` | `/api/patients/1` | Update patient information | `204 No Content` |
+| 7 | `GET` | `/api/patients/search?lastName=Jura` | Search patients by last name | `200 OK` |
+| 8 | `GET` | `/api/patients/filter?active=true` | Filter active patients | `200 OK` |
+| 9 | `GET` | `/api/patients/filter?active=false` | Filter inactive patients | `200 OK` |
+| 10 | `PUT` | `/api/patients/1/status?active=false` | Deactivate a patient | `200 OK` |
+| 11 | `PUT` | `/api/patients/1/status?active=true` | Reactivate a patient | `200 OK` |
+
+The IDs (`1`, `2`) are examples from the `.http` file and may need adjusting to match your database. Invalid request data is rejected with `400 Bad Request`; requests for non-existent patients return `404 Not Found` where applicable. There is **no `DELETE /api/patients/{id}` endpoint**: patients are deactivated rather than physically deleted.
 
 ## Project structure
 
@@ -50,24 +69,22 @@ PatientManager/
 ├── PatientManager.sln
 ├── README.md
 └── PatientManager.Api/
-    ├── Controllers/       # HTTP endpoints and responses
-    ├── Data/              # EF Core AppDbContext
-    ├── Dtos/              # Request and response DTOs
-    ├── Migrations/        # EF Core database migrations
-    ├── Models/            # Patient entity
-    ├── Services/          # Business logic and database operations
-    ├── Validation/        # Custom date-of-birth validation
-    ├── Properties/        # Launch profiles
-    ├── Program.cs         # Application configuration and DI
-    └── PatientManager.Api.http
+    ├── Controllers/             # HTTP endpoints
+    ├── Data/
+    │   ├── AppDbContext.cs      # EF Core context
+    │   └── Configurations/      # Fluent API (relationship delete behavior)
+    ├── Dtos/                    # Patient request and response DTOs
+    ├── Enums/                   # Gender and AppointmentStatus
+    ├── Helpers/                 # PESEL and phone number logic
+    ├── Mappings/                # PatientMapper
+    ├── Migrations/              # Database schema history
+    ├── Models/                  # Patient, Doctor, Appointment, EmergencyContact
+    ├── Services/                # IPatientService and PatientService
+    ├── Validation/              # Custom validation attributes
+    ├── Properties/              # Launch profiles
+    ├── Program.cs               # Dependency injection and middleware
+    └── PatientManager.Api.http  # Positive-path API requests
 ```
-
-## Data storage
-
-Patient records are stored in the `PatientManagerDb` SQL Server database using Entity Framework Core. The database schema is managed through migrations included in this repository.
-
-The database is **not included** in the repository. Each developer creates a local database by configuring a connection string and applying the existing migrations. A new database starts without patient records.
-
 
 ## Getting started
 
@@ -75,33 +92,33 @@ The database is **not included** in the repository. Each developer creates a loc
 
 - .NET 10 SDK
 - Microsoft SQL Server (e.g. SQL Server Express)
-- EF Core CLI tools (`dotnet-ef`)
+- EF Core CLI tool (`dotnet-ef`)
 
 ### Setup
 
-1. Clone the repository and navigate to the API project:
+1. Clone the repository and open the API project directory:
 
    ```bash
    cd PatientManager.Api
    ```
 
-2. Configure `DefaultConnection` in `appsettings.Development.json` to match your SQL Server instance.
-
-   Example for SQL Server Express:
+2. Configure `ConnectionStrings:DefaultConnection` in `appsettings.Development.json` for your local SQL Server instance. For example, with SQL Server Express and Windows authentication:
 
    ```json
-   "ConnectionStrings": {
-     "DefaultConnection": "Server=.\\SQLEXPRESS;Database=PatientManagerDb;Trusted_Connection=True;Encrypt=True;TrustServerCertificate=True;"
+   {
+     "ConnectionStrings": {
+       "DefaultConnection": "Server=.\\SQLEXPRESS;Database=PatientManagerDb;Trusted_Connection=True;Encrypt=True;TrustServerCertificate=True;"
+     }
    }
    ```
 
-3. Apply the existing EF Core migrations to create the database:
+3. Apply the existing migrations:
 
    ```bash
    dotnet ef database update -- --environment Development
    ```
 
-4. Run the application:
+4. Start the API using the HTTPS launch profile:
 
    ```bash
    dotnet run --launch-profile https

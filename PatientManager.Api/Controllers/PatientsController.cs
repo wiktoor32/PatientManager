@@ -2,6 +2,8 @@
 using PatientManager.Api.Dtos;
 using PatientManager.Api.Models;
 using PatientManager.Api.Services;
+using PatientManager.Api.Helpers;
+using PatientManager.Api.Mappings;
 
 namespace PatientManager.Api.Controllers;
 
@@ -23,7 +25,7 @@ public class PatientsController : ControllerBase
         List<Patient> patients = await _patientService.GetPatientsAsync();
 
         return patients
-            .Select(MapToPatientDto)
+            .Select(PatientMapper.ToPatientDto)
             .ToList();
     }
 
@@ -39,27 +41,28 @@ public class PatientsController : ControllerBase
             return NotFound();
         }
 
-        return MapToPatientDto(patient);
+        return PatientMapper.ToPatientDto(patient);
     }
 
     [HttpPost]
     public async Task<ActionResult<PatientDto>> CreatePatientAsync(
         [FromBody] CreatePatientDto createPatientDto)
     {
-        Patient newPatient = new Patient
+        if (!PhoneNumberHelper.TryNormalize(
+                createPatientDto.PhoneNumber,
+                out string? normalizedPhone) || normalizedPhone is null)
         {
-            FirstName = createPatientDto.FirstName,
-            LastName = createPatientDto.LastName,
-            DateOfBirth = createPatientDto.DateOfBirth,
-            Email = createPatientDto.Email
-        };
+            return BadRequest("Invalid phone number.");
+        }
+
+        Patient newPatient = PatientMapper.ToPatient(createPatientDto, normalizedPhone);
 
         Patient createdPatient = await _patientService.CreatePatientAsync(newPatient);
 
         return CreatedAtAction(
             nameof(GetPatientAsync),
             new { id = createdPatient.Id },
-            MapToPatientDto(createdPatient)
+            PatientMapper.ToPatientDto(createdPatient)
         );
     }
     
@@ -68,13 +71,14 @@ public class PatientsController : ControllerBase
         [FromRoute] int id,
         [FromBody] UpdatePatientDto updatePatientDto)
     {
-        Patient patientData = new Patient
+        if (!PhoneNumberHelper.TryNormalize(
+                updatePatientDto.PhoneNumber,
+                out string? normalizedPhone) || normalizedPhone is null)
         {
-            FirstName = updatePatientDto.FirstName,
-            LastName = updatePatientDto.LastName,
-            DateOfBirth = updatePatientDto.DateOfBirth,
-            Email = updatePatientDto.Email
-        };
+            return BadRequest("Invalid phone number.");
+        }
+
+        Patient patientData = PatientMapper.ToPatient(updatePatientDto, normalizedPhone);
         
         Patient? updatedPatient = await _patientService.UpdatePatientAsync(id, patientData);
 
@@ -86,18 +90,6 @@ public class PatientsController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeletePatientAsync(
-        [FromRoute] int id)
-    {
-        if (await _patientService.DeletePatientAsync(id))
-        {
-            return NoContent();
-        }
-
-        return NotFound();
-    }
-    
     //Additional operations
     [HttpGet("search")]
     public async Task<ActionResult<List<PatientDto>>> SearchByLastNameAsync(
@@ -106,7 +98,7 @@ public class PatientsController : ControllerBase
         List<Patient> patients = await _patientService.SearchByLastNameAsync(lastName);
 
         return patients
-            .Select(MapToPatientDto)
+            .Select(PatientMapper.ToPatientDto)
             .ToList();
     }
 
@@ -117,7 +109,7 @@ public class PatientsController : ControllerBase
         List<Patient> patients = await _patientService.FilterByActiveStatusAsync(active);
 
         return patients
-            .Select(MapToPatientDto)
+            .Select(PatientMapper.ToPatientDto)
             .ToList();
     }
 
@@ -133,7 +125,7 @@ public class PatientsController : ControllerBase
             return NotFound();
         }
 
-        return MapToPatientDto(updatedPatient);
+        return PatientMapper.ToPatientDto(updatedPatient);
     }
 
     [HttpGet("{id}/summary")]
@@ -147,27 +139,6 @@ public class PatientsController : ControllerBase
             return NotFound();
         }
 
-        PatientSummaryDto patientSummaryDto = new PatientSummaryDto
-        {
-            Id = patient.Id,
-            FirstName = patient.FirstName,
-            LastName = patient.LastName,
-            IsActive = patient.IsActive
-        };
-
-        return patientSummaryDto;
-    }
-    
-    private static PatientDto MapToPatientDto(Patient patient)
-    {
-        return new PatientDto
-        {
-            Id = patient.Id,
-            FirstName = patient.FirstName,
-            LastName = patient.LastName,
-            DateOfBirth = patient.DateOfBirth,
-            Email = patient.Email,
-            IsActive = patient.IsActive
-        };
+        return PatientMapper.ToPatientSummaryDto(patient);
     }
 }

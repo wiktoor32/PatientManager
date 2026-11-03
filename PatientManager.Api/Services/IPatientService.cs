@@ -9,7 +9,6 @@ public interface IPatientService
     Task<Patient?> GetPatientAsync(int id);
     Task<Patient> CreatePatientAsync(Patient newPatient);
     Task<Patient?> UpdatePatientAsync(int id, Patient patientData);
-    Task<bool> DeletePatientAsync(int id);
     
     //Additional operations
     Task<List<Patient>> SearchByLastNameAsync(string lastName);

@@ -3,7 +3,10 @@
 public class PatientSummaryDto
 {
     public int Id { get; set; }
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
+
+    public required string FirstName { get; set; }
+    public required string LastName { get; set; }
+    public required string Pesel { get; set; }
+
     public bool IsActive { get; set; }
 }

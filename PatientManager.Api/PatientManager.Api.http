@@ -1,58 +1,77 @@
 @host = https://localhost:7244
 
-### Get all patients
-
-GET {{host}}/api/patients
+### 1. Create patient - (expected: 201 Created)
+POST {{host}}/api/patients
+Content-Type: application/json
 Accept: application/json
 
-### Get patient by id
+{
+  "firstName": "Szymon",
+  "lastName": "Jura",
+  "gender": "Male",
+  "dateOfBirth": "2004-07-27",
+  "pesel": "04272712317",
+  "email": "szymon.jura@example.com",
+  "phoneNumber": "600 123 456"
+}
+
+### 2. Create second patient - (expected: 201 Created)
+POST {{host}}/api/patients
+Content-Type: application/json
+Accept: application/json
+
+{
+  "firstName": "Anna",
+  "lastName": "Nowak",
+  "gender": "Female",
+  "dateOfBirth": "2002-09-18",
+  "pesel": "02291824622",
+  "email": "anna.nowak@example.com",
+  "phoneNumber": "+48 501-234-567"
+}
+
+### 3. Get patient by id - (expected: 200 OK)
 GET {{host}}/api/patients/1
 Accept: application/json
 
-### Create patient
-
-POST {{host}}/api/patients
-Content-Type: application/json
-
-{
-  "firstName": "Symon",
-  "lastName": "Jura",
-  "dateOfBirth": "2004-07-27",
-  "email": "szymon.jura@example.com"
-}
-
-### Update patient
-
-PUT {{host}}/api/patients/3
-Content-Type: application/json
-
-{
-  "firstName": "Adam",
-  "lastName": "Szybki",
-  "dateOfBirth": "1999-05-20",
-  "email": "adam.szybki@example.com"
-}
-
-### Delete patient
-
-DELETE {{host}}/api/patients/4
-
-### Search patients by last name
-
-GET {{host}}/api/patients/search?lastName=sz
+### 4. Get patient summary - (oczekiwane: 200 OK)
+GET {{host}}/api/patients/1/summary
 Accept: application/json
 
-### Filter patients by active status
+### 5. Get all patients - (expected: 200 OK)
+GET {{host}}/api/patients
+Accept: application/json
 
+### 6. Update patient - (expected: 204 No Content)
+PUT {{host}}/api/patients/1
+Content-Type: application/json
+
+{
+  "firstName": "Szymon",
+  "lastName": "Jura",
+  "gender": "Male",
+  "dateOfBirth": "2004-07-27",
+  "pesel": "04272712317",
+  "email": "szymon.nowy@example.com",
+  "phoneNumber": "+48 600-123-456"
+}
+
+### 7. Search by last name - (expected: 200 OK)
+GET {{host}}/api/patients/search?lastName=Jura
+Accept: application/json
+
+### 8. Filter active patients - (expected: 200 OK)
+GET {{host}}/api/patients/filter?active=true
+Accept: application/json
+
+### 9. Filter inactive patients - (expected: 200 OK)
 GET {{host}}/api/patients/filter?active=false
 Accept: application/json
 
-### Update patient active status
-
+### 10. Deactivate patient - (expected: 200 OK)
 PUT {{host}}/api/patients/1/status?active=false
 Accept: application/json
 
-### Get patient summary
-
-GET {{host}}/api/patients/3/summary
+### 11. Reactivate patient - (expected: 200 OK)
+PUT {{host}}/api/patients/1/status?active=true
 Accept: application/json
