@@ -11,5 +11,17 @@ public class EmergencyContactConfiguration : IEntityTypeConfiguration<EmergencyC
         builder.HasOne(e => e.Patient)
             .WithOne(p => p.EmergencyContact)
             .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Property(e => e.FirstName)
+            .HasMaxLength(100);
+
+        builder.Property(e => e.LastName)
+            .HasMaxLength(100);
+
+        builder.Property(e => e.Relationship)
+            .HasMaxLength(100);
+
+        builder.Property(e => e.PhoneNumber)
+            .HasMaxLength(40);
     }
 }

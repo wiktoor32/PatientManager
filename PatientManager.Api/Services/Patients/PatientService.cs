@@ -2,7 +2,7 @@
 using PatientManager.Api.Data;
 using PatientManager.Api.Models;
 
-namespace PatientManager.Api.Services;
+namespace PatientManager.Api.Services.Patients;
 
 public class PatientService : IPatientService
 {
@@ -37,6 +37,16 @@ public class PatientService : IPatientService
         await _context.SaveChangesAsync();
 
         return newPatient;
+    }
+
+    public async Task<Patient?> GetPatientDetailsAsync(int id)
+    {
+        return await _context.Patients
+            .AsNoTracking()
+            .Include(p => p.EmergencyContact)
+            .Include(p => p.Appointments)
+            .ThenInclude(a => a.Doctor)
+            .FirstOrDefaultAsync(p => p.Id == id);
     }
 
     public async Task<Patient?> UpdatePatientAsync(int id, Patient patientData)

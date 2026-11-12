@@ -1,5 +1,7 @@
 @host = https://localhost:7244
 
+# ======================= PATIENTS =======================
+
 ### 1. Create patient - (expected: 201 Created)
 POST {{host}}/api/patients
 Content-Type: application/json
@@ -56,22 +58,258 @@ Content-Type: application/json
   "phoneNumber": "+48 600-123-456"
 }
 
-### 7. Search by last name - (expected: 200 OK)
-GET {{host}}/api/patients/search?lastName=Jura
+### 7. Get updated patient by id - (expected: 200 OK)
+GET {{host}}/api/patients/1
 Accept: application/json
 
-### 8. Filter active patients - (expected: 200 OK)
+### 8. Search by last name - (expected: 200 OK)
+GET {{host}}/api/patients/search/last-name?lastName=Jura
+Accept: application/json
+
+### 9. Filter active patients - (expected: 200 OK)
 GET {{host}}/api/patients/filter?active=true
 Accept: application/json
 
-### 9. Filter inactive patients - (expected: 200 OK)
+### 10. Filter inactive patients - (expected: 200 OK)
 GET {{host}}/api/patients/filter?active=false
 Accept: application/json
 
-### 10. Deactivate patient - (expected: 200 OK)
+### 11. Deactivate patient - (expected: 200 OK)
 PUT {{host}}/api/patients/1/status?active=false
 Accept: application/json
 
-### 11. Reactivate patient - (expected: 200 OK)
+### 12. Reactivate patient - (expected: 200 OK)
 PUT {{host}}/api/patients/1/status?active=true
+Accept: application/json
+
+# ======================= DOCTORS =======================
+
+### 13. Create doctor - (expected: 201 Created)
+POST {{host}}/api/doctors
+Content-Type: application/json
+Accept: application/json
+
+{
+  "firstName": "Adam",
+  "lastName": "Zieliński",
+  "specialization": "Kardiologia"
+}
+
+### 14. Create second doctor - (expected: 201 Created)
+POST {{host}}/api/doctors
+Content-Type: application/json
+Accept: application/json
+
+{
+  "firstName": "Zofia",
+  "lastName": "Wiśniewska",
+  "specialization": "Dermatologia"
+}
+
+### 15. Get doctor by id - (expected: 200 OK)
+GET {{host}}/api/doctors/1
+Accept: application/json
+
+### 16. Get all doctors - (expected: 200 OK)
+GET {{host}}/api/doctors
+Accept: application/json
+
+### 17. Update doctor - (expected: 204 No Content)
+PUT {{host}}/api/doctors/1
+Content-Type: application/json
+
+{
+  "firstName": "Adam",
+  "lastName": "Zieliński",
+  "specialization": "Kardiologia interwencyjna"
+}
+
+### 18. Get updated doctor by id - (expected: 200 OK)
+GET {{host}}/api/doctors/1
+Accept: application/json
+
+### 19. Search doctor by last name - (expected: 200 OK)
+GET {{host}}/api/doctors/search/last-name?lastName=Zieliński
+Accept: application/json
+
+### 20. Search doctor by specialization - (expected: 200 OK)
+GET {{host}}/api/doctors/search/specialization?specialization=Kardiologia
+Accept: application/json
+
+### 21. Filter active doctors - (expected: 200 OK)
+GET {{host}}/api/doctors/filter?active=true
+Accept: application/json
+
+### 22. Filter inactive doctors - (expected: 200 OK)
+GET {{host}}/api/doctors/filter?active=false
+Accept: application/json
+
+### 23. Deactivate doctor - (expected: 200 OK)
+PUT {{host}}/api/doctors/1/status?active=false
+Accept: application/json
+
+### 24. Reactivate doctor - (expected: 200 OK)
+PUT {{host}}/api/doctors/1/status?active=true
+Accept: application/json
+
+# ======================= EMERGENCY CONTACTS =======================
+
+### 25. Create emergency contact for patient 1 - (expected: 201 Created)
+POST {{host}}/api/patients/1/emergency-contact
+Content-Type: application/json
+Accept: application/json
+
+{
+  "firstName": "Maria",
+  "lastName": "Jura",
+  "relationship": "Matka",
+  "phoneNumber": "+48 502 345 678"
+}
+
+### 26. Create emergency contact for patient 2 - (expected: 201 Created)
+POST {{host}}/api/patients/2/emergency-contact
+Content-Type: application/json
+Accept: application/json
+
+{
+  "firstName": "Piotr",
+  "lastName": "Nowak",
+  "relationship": "Brat",
+  "phoneNumber": "+48 504 567 890"
+}
+
+### 27. Get emergency contact for patient 1 - (expected: 200 OK)
+GET {{host}}/api/patients/1/emergency-contact
+Accept: application/json
+
+### 28. Update emergency contact for patient 1 - (expected: 204 No Content)
+PUT {{host}}/api/patients/1/emergency-contact
+Content-Type: application/json
+
+{
+  "firstName": "Maria",
+  "lastName": "Jura",
+  "relationship": "Matka",
+  "phoneNumber": "+48 503 456 789"
+}
+
+### 29. Get updated emergency contact for patient 1 - (expected: 200 OK)
+GET {{host}}/api/patients/1/emergency-contact
+Accept: application/json
+
+### 30. Delete emergency contact for patient 2 - (expected: 204 No Content)
+DELETE {{host}}/api/patients/2/emergency-contact
+
+# ======================= APPOINTMENTS =======================
+
+### 31. Create first appointment: patient 1 (Szymon), doctor 1 (Adam) - (expected: 201 Created)
+POST {{host}}/api/appointments
+Content-Type: application/json
+Accept: application/json
+
+{
+  "patientId": 1,
+  "doctorId": 1,
+  "scheduledAt": "2027-06-15T09:00:00+02:00",
+  "durationMinutes": 30,
+  "description": "Konsultacja kardiologiczna"
+}
+
+### 32. Create second appointment: patient 2 (Anna), doctor 2 (Zofia) - (expected: 201 Created)
+POST {{host}}/api/appointments
+Content-Type: application/json
+Accept: application/json
+
+{
+  "patientId": 2,
+  "doctorId": 2,
+  "scheduledAt": "2027-06-15T10:00:00+02:00",
+  "durationMinutes": 30,
+  "description": "Konsultacja dermatologiczna"
+}
+
+### 33. Get first appointment by id - (expected: 200 OK)
+GET {{host}}/api/appointments/1
+Accept: application/json
+
+### 34. Get all appointments - (expected: 200 OK, 2 appointments)
+GET {{host}}/api/appointments
+Accept: application/json
+
+### 35. Update first appointment: reschedule - (expected: 204 No Content)
+PUT {{host}}/api/appointments/1
+Content-Type: application/json
+
+{
+  "doctorId": 1,
+  "scheduledAt": "2027-06-15T11:30:00+02:00",
+  "durationMinutes": 45,
+  "description": "Konsultacja kardiologiczna - zmieniony termin"
+}
+
+### 36. Get updated first appointment - (expected: 200 OK)
+GET {{host}}/api/appointments/1
+Accept: application/json
+
+### 37. Get patient 1 appointments - (expected: 200 OK)
+GET {{host}}/api/patients/1/appointments
+Accept: application/json
+
+### 38. Get patient 2 appointments - (expected: 200 OK)
+GET {{host}}/api/patients/2/appointments
+Accept: application/json
+
+### 39. Get doctor 1 appointments - (expected: 200 OK)
+GET {{host}}/api/doctors/1/appointments
+Accept: application/json
+
+### 40. Get doctor 2 appointments - (expected: 200 OK)
+GET {{host}}/api/doctors/2/appointments
+Accept: application/json
+
+### 41. Create third appointment: patient 2 (Anna), doctor 1 (Adam) - (expected: 201 Created)
+POST {{host}}/api/appointments
+Content-Type: application/json
+Accept: application/json
+
+{
+  "patientId": 2,
+  "doctorId": 1,
+  "scheduledAt": "2027-06-16T14:00:00+02:00",
+  "durationMinutes": 30,
+  "description": "Kontrola kardiologiczna"
+}
+
+### 42. Cancel third appointment - (expected: 200 OK, status Cancelled)
+PUT {{host}}/api/appointments/3/status?status=Cancelled
+Accept: application/json
+
+### 43. Get cancelled third appointment - (expected: 200 OK, status Cancelled)
+GET {{host}}/api/appointments/3
+Accept: application/json
+
+# ======================= DETAILS =======================
+
+### 44. Get appointment 1 details - (expected: 200 OK; patient 1, doctor 1)
+GET {{host}}/api/appointments/1/details
+Accept: application/json
+
+### 45. Get cancelled appointment 3 details - (expected: 200 OK; status Cancelled)
+GET {{host}}/api/appointments/3/details
+Accept: application/json
+
+### 46. Get patient 1 details - (expected: 200 OK; emergency contact and 1 appointment)
+GET {{host}}/api/patients/1/details
+Accept: application/json
+
+### 47. Get patient 2 details - (expected: 200 OK; emergencyContact null and 2 appointments)
+GET {{host}}/api/patients/2/details
+Accept: application/json
+
+### 48. Get doctor 1 details - (expected: 200 OK; 2 appointments)
+GET {{host}}/api/doctors/1/details
+Accept: application/json
+
+### 49. Get doctor 2 details - (expected: 200 OK; 1 appointment)
+GET {{host}}/api/doctors/2/details
 Accept: application/json
