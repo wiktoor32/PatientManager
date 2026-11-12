@@ -1,6 +1,6 @@
 ﻿using PatientManager.Api.Enums;
 
-namespace PatientManager.Api.Dtos;
+namespace PatientManager.Api.Dtos.Patients;
 
 public class PatientDto
 {

@@ -1,4 +1,4 @@
-﻿using PatientManager.Api.Dtos;
+﻿using PatientManager.Api.Dtos.Patients;
 using PatientManager.Api.Models;
 
 namespace PatientManager.Api.Mappings;
@@ -59,6 +59,23 @@ public static class PatientMapper
             Pesel = dto.Pesel,
             Email = dto.Email,
             PhoneNumber = normalizedPhone
+        };
+    }
+
+    public static PatientDetailsDto ToPatientDetailsDto(Patient patient)
+    {
+        return new PatientDetailsDto
+        {
+            Patient = ToPatientDto(patient),
+
+            EmergencyContact = patient.EmergencyContact is null ? null
+                : EmergencyContactMapper.ToEmergencyContactDto(
+                    patient.EmergencyContact),
+
+            Appointments = patient.Appointments
+                .OrderByDescending(a => a.ScheduledAt)
+                .Select(AppointmentMapper.ToPatientAppointmentDto)
+                .ToList()
         };
     }
 }

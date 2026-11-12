@@ -11,6 +11,7 @@ public class Appointment
     public required DateTimeOffset ScheduledAt { get; set; }
     public required int DurationMinutes { get; set; }
     public required AppointmentStatus Status { get; set; }
+
     public string? Description { get; set; }
 
     public Patient Patient { get; set; } = null!;

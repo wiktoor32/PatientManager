@@ -1,66 +1,137 @@
 ﻿# PatientManager
 
-PatientManager is an ASP.NET Core Web API developed as a C#/.NET backend learning and portfolio project. It is being expanded into a hospital-oriented patient management system, with an emphasis on clean separation of responsibilities, relational data modeling, input validation, and asynchronous database access.
+PatientManager is a **RESTful ASP.NET Core Web API** developed as a C#/.NET backend learning and portfolio project. It provides a small patient management system for managing patients, doctors, emergency contacts, and medical appointments using Entity Framework Core and Microsoft SQL Server.
 
-**Current scope:** Patient management is implemented. Models, relationships, and database tables for doctors, appointments, and emergency contacts are prepared, but their API endpoints and application services are not implemented yet.
+The project focuses on practical backend concepts: layered responsibilities, DTOs, validation, relationships, business rules, asynchronous operations, and database migrations. It also uses ASP.NET Core middleware for centralized exception handling.
 
 ## Features
 
-### Implemented
+### Patient management
 
-- Create, retrieve, and update patient records, with automatically assigned IDs, active status by default, and UTC creation timestamps
-- Search for patients by last name and filter by active status
-- Activate and deactivate patients without physically deleting their records
-- Retrieve a patient summary
-- Use separate request/response DTOs and a dedicated `PatientMapper`
-- Validate required fields, name lengths, email addresses, gender, and dates of birth
-- Validate the structure, checksum, encoded date, and non-future date of Polish PESEL numbers
-- Validate international phone numbers with libphonenumber-csharp and store them in the E.164 format (e.g., +48600123456)
-- Store data in Microsoft SQL Server with Entity Framework Core and migrations
-- Return appropriate HTTP responses (200, 201, 204, 400, 404); handle unhandled exceptions with ASP.NET Core Problem Details
+- Create, retrieve, list, and update patients.
+- Search patients by last name and filter by active status.
+- Activate and deactivate patients instead of permanently deleting them.
+- Retrieve a brief patient summary or a detailed patient card with emergency contact information and appointment history.
+- Validate required personal information, email addresses, dates of birth, Polish PESEL numbers, and phone numbers.
+- Normalize valid phone numbers to the **E.164** format.
+- Enforce **unique PESEL values** through a SQL Server unique index.
 
+### Doctor management
 
-### Database model prepared for future features
+- Create, retrieve, list, and update doctors.
+- Search by last name or specialization and filter by active status.
+- Activate and deactivate doctors.
+- Retrieve a detailed doctor card, including appointments and associated patient summaries.
 
-- **Patient → Appointments:** one-to-many; an appointment requires a patient
-- **Doctor → Appointments:** one-to-many; an appointment requires a doctor
-- **Patient → EmergencyContact:** one-to-zero-or-one; each emergency contact requires a patient
-- Required relationships use `DeleteBehavior.NoAction` to prevent cascade deletion of related records
-- Entity configurations are kept in `Data/Configurations/` and use EF Core conventions wherever possible
+### Emergency contacts
 
-The `Doctors`, `Appointments`, and `EmergencyContacts` tables exist, but their management endpoints are planned for later development.
+- Add, retrieve, update, or delete a patient's emergency contact.
+- Allow **at most one emergency contact per patient**.
+- Manage contacts through routes nested under the associated patient.
+
+### Appointment management
+
+- Schedule, retrieve, list, and reschedule appointments, including detailed views with associated patient and doctor information.
+- Retrieve appointments by patient or doctor.
+- Automatically assign Scheduled status and validate patient and doctor availability, appointment dates, and durations.
+- Prevent overlapping appointments for the same doctor, excluding cancelled appointments.
+- Allow rescheduling only for future appointments with Scheduled status.
+- Support Scheduled, Completed, Cancelled, and NoShow statuses with controlled transitions, preserving appointment history instead of deleting records.
+- Handle business errors using a lightweight Result Pattern and C# pattern matching to map errors to appropriate HTTP responses.
 
 ## Tech stack
 
-- C# and .NET 10
-- ASP.NET Core Web API (controllers)
-- Entity Framework Core 10, SQL Server provider, and migrations
-- Microsoft SQL Server
-- LINQ, `async` / `await`, and Dependency Injection
-- Data Annotations and custom validation attributes
-- `libphonenumber-csharp` for phone number validation and E.164 formatting
-- ASP.NET Core Problem Details and OpenAPI
-- JetBrains Rider HTTP Client (`.http` requests)
+- **C# / .NET 10**
+- **ASP.NET Core Web API** (controllers)
+- **Entity Framework Core 10** (Code First, Fluent API, migrations)
+- **Microsoft SQL Server**
+- **LINQ**, **async/await**, and **Dependency Injection**
+- **DTOs** and dedicated mapping classes
+- **Data Annotations** and custom validation attributes
+- **libphonenumber-csharp** for phone validation and E.164 normalization
+- **OpenAPI** documentation (Development only)
+- **JetBrains Rider HTTP Client** for manual request testing
 
 ## API endpoints
 
-The following table lists all **11 positive-path requests** from `PatientManager.Api.http`. Several requests use the same route with different data or query parameters, so these represent **8 distinct method-and-route combinations**.
+All paths below are relative to the API host (for example, `https://localhost:7244`). The tables document the API routes. The `PatientManager.Api.http` file contains sample requests for trying them locally.
 
-| # | Method | Endpoint | Description | Success response |
-| --- | --- | --- | --- | --- |
-| 1 | `POST` | `/api/patients` | Create the first patient | `201 Created` |
-| 2 | `POST` | `/api/patients` | Create the second patient | `201 Created` |
-| 3 | `GET` | `/api/patients/1` | Get patient details by ID | `200 OK` |
-| 4 | `GET` | `/api/patients/1/summary` | Get patient summary, including PESEL | `200 OK` |
-| 5 | `GET` | `/api/patients` | List all patients | `200 OK` |
-| 6 | `PUT` | `/api/patients/1` | Update patient information | `204 No Content` |
-| 7 | `GET` | `/api/patients/search?lastName=Jura` | Search patients by last name | `200 OK` |
-| 8 | `GET` | `/api/patients/filter?active=true` | Filter active patients | `200 OK` |
-| 9 | `GET` | `/api/patients/filter?active=false` | Filter inactive patients | `200 OK` |
-| 10 | `PUT` | `/api/patients/1/status?active=false` | Deactivate a patient | `200 OK` |
-| 11 | `PUT` | `/api/patients/1/status?active=true` | Reactivate a patient | `200 OK` |
+### Patients
 
-The IDs (`1`, `2`) are examples from the `.http` file and may need adjusting to match your database. Invalid request data is rejected with `400 Bad Request`; requests for non-existent patients return `404 Not Found` where applicable. There is **no `DELETE /api/patients/{id}` endpoint**: patients are deactivated rather than physically deleted.
+| Method | Endpoint | Description | Success |
+| --- | --- | --- | --- |
+| `POST` | `/api/patients` | Create a patient | `201 Created` |
+| `GET` | `/api/patients` | Get all patients | `200 OK` |
+| `GET` | `/api/patients/{id}` | Get a patient by ID | `200 OK` |
+| `GET` | `/api/patients/{id}/summary` | Get a short patient summary | `200 OK` |
+| `PUT` | `/api/patients/{id}` | Update patient information | `204 No Content` |
+| `GET` | `/api/patients/search/last-name?lastName=Jura` | Search patients by last name | `200 OK` |
+| `GET` | `/api/patients/filter?active=true` | Filter patients by active status (`true` or `false`) | `200 OK` |
+| `PUT` | `/api/patients/{id}/status?active=false` | Set patient active status (`true` or `false`) | `200 OK` |
+
+Patients are deactivated rather than deleted; there is no `DELETE /api/patients/{id}` endpoint.
+
+### Doctors
+
+| Method | Endpoint | Description | Success |
+| --- | --- | --- | --- |
+| `POST` | `/api/doctors` | Create a doctor | `201 Created` |
+| `GET` | `/api/doctors` | Get all doctors | `200 OK` |
+| `GET` | `/api/doctors/{id}` | Get a doctor by ID | `200 OK` |
+| `PUT` | `/api/doctors/{id}` | Update doctor information | `204 No Content` |
+| `GET` | `/api/doctors/search/last-name?lastName=Zieliński` | Search doctors by last name | `200 OK` |
+| `GET` | `/api/doctors/search/specialization?specialization=Kardiologia` | Search doctors by specialization | `200 OK` |
+| `GET` | `/api/doctors/filter?active=true` | Filter doctors by active status (`true` or `false`) | `200 OK` |
+| `PUT` | `/api/doctors/{id}/status?active=false` | Set doctor active status (`true` or `false`) | `200 OK` |
+
+### Emergency contacts
+
+| Method | Endpoint | Description | Success |
+| --- | --- | --- | --- |
+| `POST` | `/api/patients/{patientId}/emergency-contact` | Add an emergency contact | `201 Created` |
+| `GET` | `/api/patients/{patientId}/emergency-contact` | Get the patient's emergency contact | `200 OK` |
+| `PUT` | `/api/patients/{patientId}/emergency-contact` | Update the emergency contact | `204 No Content` |
+| `DELETE` | `/api/patients/{patientId}/emergency-contact` | Delete the emergency contact | `204 No Content` |
+
+### Appointments
+
+| Method | Endpoint | Description | Success |
+| --- | --- | --- | --- |
+| `POST` | `/api/appointments` | Schedule a new appointment | `201 Created` |
+| `GET` | `/api/appointments` | Get all appointments | `200 OK` |
+| `GET` | `/api/appointments/{id}` | Get an appointment by ID | `200 OK` |
+| `PUT` | `/api/appointments/{id}` | Update or reschedule an appointment | `204 No Content` |
+| `GET` | `/api/patients/{patientId}/appointments` | Get appointments for a patient | `200 OK` |
+| `GET` | `/api/doctors/{doctorId}/appointments` | Get appointments for a doctor | `200 OK` |
+| `PUT` | `/api/appointments/{id}/status?status=Cancelled` | Change appointment status (subject to business rules) | `200 OK` |
+
+Appointments are cancelled through the status endpoint rather than physically deleted.
+
+### Detailed views
+
+| Method | Endpoint | Description | Success |
+| --- | --- | --- | --- |
+| `GET` | `/api/appointments/{id}/details` | Appointment details with nested patient summary and doctor information | `200 OK` |
+| `GET` | `/api/patients/{id}/details` | Full patient card with emergency contact and appointments (including doctors) | `200 OK` |
+| `GET` | `/api/doctors/{id}/details` | Full doctor card with appointments (including patient summaries) | `200 OK` |
+
+The detailed views use EF Core eager loading (`Include` / `ThenInclude`) and dedicated response DTOs. A patient without an emergency contact receives `emergencyContact: null`; a patient or doctor without appointments receives an empty `appointments` list.
+
+## Data model and database rules
+
+Relationships:
+
+- **Patient 1 → many Appointments**
+- **Doctor 1 → many Appointments**
+- **Patient 1 → zero or one EmergencyContact**
+
+Entity Framework Core recognizes standard keys and relationships automatically. **Fluent API** is used to define additional database rules:
+
+- A unique index on `Patient.Pesel`.
+- Maximum lengths for text fields, such as names, PESEL, email, phone numbers, specialization, relationship, and appointment description.
+- `DeleteBehavior.NoAction` to prevent automatic deletion of related records.
+
+Database schema changes are managed through **EF Core migrations** (`InitialCreate`, `ExtendPatientAndAddHospitalEntities`, and `AddEntityConstraints`).
 
 ## Project structure
 
@@ -69,21 +140,21 @@ PatientManager/
 ├── PatientManager.sln
 ├── README.md
 └── PatientManager.Api/
-    ├── Controllers/             # HTTP endpoints
+    ├── Controllers/             # API endpoints
     ├── Data/
-    │   ├── AppDbContext.cs      # EF Core context
-    │   └── Configurations/      # Fluent API (relationship delete behavior)
-    ├── Dtos/                    # Patient request and response DTOs
+    │   ├── AppDbContext.cs      # EF Core DbContext
+    │   └── Configurations/      # Entity configurations (Fluent API)
+    ├── Dtos/                    # Request and response DTOs
     ├── Enums/                   # Gender and AppointmentStatus
-    ├── Helpers/                 # PESEL and phone number logic
-    ├── Mappings/                # PatientMapper
-    ├── Migrations/              # Database schema history
-    ├── Models/                  # Patient, Doctor, Appointment, EmergencyContact
-    ├── Services/                # IPatientService and PatientService
+    ├── Helpers/                 # PESEL and phone-number helpers
+    ├── Mappings/                # Mapping between entities and DTOs
+    ├── Migrations/              # EF Core migrations
+    ├── Models/                  # Domain entities
+    ├── Services/                # Service interfaces and implementations
     ├── Validation/              # Custom validation attributes
-    ├── Properties/              # Launch profiles
-    ├── Program.cs               # Dependency injection and middleware
-    └── PatientManager.Api.http  # Positive-path API requests
+    ├── Properties/              # Launch settings
+    ├── Program.cs               # DI, middleware, and application setup
+    └── PatientManager.Api.http  # Manual API request examples
 ```
 
 ## Getting started

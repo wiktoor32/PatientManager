@@ -1,4 +1,4 @@
-﻿namespace PatientManager.Api.Dtos;
+﻿namespace PatientManager.Api.Dtos.Patients;
 
 public class PatientSummaryDto
 {

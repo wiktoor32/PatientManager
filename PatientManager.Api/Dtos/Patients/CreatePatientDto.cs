@@ -2,9 +2,9 @@
 using PatientManager.Api.Enums;
 using PatientManager.Api.Validation;
 
-namespace PatientManager.Api.Dtos;
+namespace PatientManager.Api.Dtos.Patients;
 
-public class UpdatePatientDto
+public class CreatePatientDto
 {
     [Required]
     [MaxLength(100)]

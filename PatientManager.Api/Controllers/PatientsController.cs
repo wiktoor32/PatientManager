@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using PatientManager.Api.Dtos;
+using PatientManager.Api.Dtos.Patients;
 using PatientManager.Api.Models;
-using PatientManager.Api.Services;
 using PatientManager.Api.Helpers;
 using PatientManager.Api.Mappings;
+using PatientManager.Api.Services.Patients;
 
 namespace PatientManager.Api.Controllers;
 
@@ -91,7 +91,7 @@ public class PatientsController : ControllerBase
     }
 
     //Additional operations
-    [HttpGet("search")]
+    [HttpGet("search/last-name")]
     public async Task<ActionResult<List<PatientDto>>> SearchByLastNameAsync(
         [FromQuery] string lastName)
     {
@@ -104,21 +104,45 @@ public class PatientsController : ControllerBase
 
     [HttpGet("filter")]
     public async Task<ActionResult<List<PatientDto>>> FilterByActiveStatusAsync(
-        [FromQuery] bool active)
+        [FromQuery] bool? active)
     {
-        List<Patient> patients = await _patientService.FilterByActiveStatusAsync(active);
+        if (active is null)
+        {
+            return BadRequest("Active status is required.");
+        }
+
+        List<Patient> patients = await _patientService.FilterByActiveStatusAsync(active.Value);
 
         return patients
             .Select(PatientMapper.ToPatientDto)
             .ToList();
     }
 
+    [HttpGet("{id}/details")]
+    public async Task<ActionResult<PatientDetailsDto>> GetPatientDetailsAsync(
+        [FromRoute] int id)
+    {
+        Patient? patient = await _patientService.GetPatientDetailsAsync(id);
+
+        if (patient is null)
+        {
+            return NotFound();
+        }
+
+        return PatientMapper.ToPatientDetailsDto(patient);
+    }
+
     [HttpPut("{id}/status")]
     public async Task<ActionResult<PatientDto>> UpdateActiveStatusAsync(
         [FromRoute] int id,
-        [FromQuery] bool active)
+        [FromQuery] bool? active)
     {
-        Patient? updatedPatient = await _patientService.UpdateActiveStatusAsync(id, active);
+        if (active is null)
+        {
+            return BadRequest("Active status is required.");
+        }
+
+        Patient? updatedPatient = await _patientService.UpdateActiveStatusAsync(id, active.Value);
 
         if (updatedPatient is null)
         {

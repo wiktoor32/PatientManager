@@ -1,6 +1,6 @@
 ﻿using PatientManager.Api.Models;
 
-namespace PatientManager.Api.Services;
+namespace PatientManager.Api.Services.Patients;
 
 public interface IPatientService
 {
@@ -13,5 +13,6 @@ public interface IPatientService
     //Additional operations
     Task<List<Patient>> SearchByLastNameAsync(string lastName);
     Task<List<Patient>> FilterByActiveStatusAsync(bool active);
+    Task<Patient?> GetPatientDetailsAsync(int id);
     Task<Patient?> UpdateActiveStatusAsync(int id, bool active);
 }

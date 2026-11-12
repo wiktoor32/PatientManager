@@ -15,5 +15,8 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
         builder.HasOne(a => a.Doctor)
             .WithMany(d => d.Appointments)
             .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Property(a => a.Description)
+            .HasMaxLength(500);
     }
 }
